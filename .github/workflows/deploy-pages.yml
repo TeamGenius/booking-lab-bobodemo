@@ -26,7 +26,10 @@ jobs:
         with:
           node-version: 20
           cache: npm
-      - run: npm ci
+      # Use `npm install` (not `npm ci`) so the runner's platform-specific
+      # optional deps (rolldown native bindings for linux-x64-gnu) are
+      # resolved from the registry. See npm/cli#4828.
+      - run: npm install --no-audit --no-fund
       - run: npm run build
       - uses: actions/upload-pages-artifact@v3
         with:
