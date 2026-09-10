@@ -22,9 +22,8 @@ const RECIPIENT = { name: 'Alex Rivera', email: 'alex.rivera@example.com' };
 // Reset + return to services landing, then wait for the page to render + a
 // session id to exist. Every script starts here to guarantee a clean slate.
 const goServices = async (ctx: TutorialCtx) => {
-  ctx.reset();
+  await ctx.reset();
   await ctx.waitForSelector('[data-tour-site-card]:not([data-tour-site-card=""])');
-  await ctx.waitForSession();
 };
 
 export const SELF_WITH_SCHEDULING: TutorialScript = {
@@ -263,6 +262,8 @@ export const GIFT_NO_SCHEDULING: TutorialScript = {
         const token = memo.claimToken as string;
         await ctx.claimGift(token, RECIPIENT.email);
         await ctx.scheduleClaimed(token);
+        await new Promise((resolve) => window.setTimeout(resolve, 0));
+        ctx.navigate(`/gift/${token}/schedule`);
       },
       waitMs: 700,
     },

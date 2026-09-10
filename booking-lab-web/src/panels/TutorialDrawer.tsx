@@ -91,7 +91,7 @@ export function TutorialDrawer({ opened, onClose }: Props) {
             leftSection={<IconRefresh size={12} />}
             onClick={() => {
               if (active) stop();
-              ctx.reset();
+              void ctx.reset();
             }}
           >
             Reset lab

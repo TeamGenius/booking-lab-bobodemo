@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import { TutorialRunner, type TutorialMode } from './TutorialRunner';
 import type { TutorialScript } from './scripts';
 
@@ -18,13 +18,18 @@ const TutorialContext = createContext<Ctx>({
 
 export function TutorialProvider({ children }: { children: React.ReactNode }) {
   const [active, setActive] = useState<Active>(null);
+  const start = useCallback(
+    (script: TutorialScript, mode: TutorialMode) => setActive({ script, mode }),
+    [],
+  );
+  const stop = useCallback(() => setActive(null), []);
   const value = useMemo<Ctx>(
     () => ({
       active,
-      start: (script, mode) => setActive({ script, mode }),
-      stop: () => setActive(null),
+      start,
+      stop,
     }),
-    [active],
+    [active, start, stop],
   );
   return (
     <TutorialContext.Provider value={value}>
@@ -33,8 +38,8 @@ export function TutorialProvider({ children }: { children: React.ReactNode }) {
         <TutorialRunner
           script={active.script}
           mode={active.mode}
-          onComplete={() => setActive(null)}
-          onCancel={() => setActive(null)}
+          onComplete={stop}
+          onCancel={stop}
         />
       )}
     </TutorialContext.Provider>

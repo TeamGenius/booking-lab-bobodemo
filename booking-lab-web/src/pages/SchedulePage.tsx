@@ -225,6 +225,7 @@ export function SchedulePage() {
                 w={40}
                 h={40}
                 p={0}
+                data-tour-date={`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`}
                 onClick={() => setSelectedDay(d)}
               >
                 {d.getDate()}
@@ -299,6 +300,7 @@ export function SchedulePage() {
             </Button>
             <Button
               color="purple"
+              data-tour="primary-action"
               onClick={handleContinue}
               disabled={!selectedSlotId}
               rightSection={<IconArrowRight size={16} />}

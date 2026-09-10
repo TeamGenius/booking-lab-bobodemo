@@ -16,12 +16,17 @@ type Props = {
 
 export function TutorialRunner({ script, mode, onComplete, onCancel }: Props) {
   const ctx = useTutorialCtx();
+  const ctxRef = useRef(ctx);
   const [stepIdx, setStepIdx] = useState(0);
   const [running, setRunning] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const memoRef = useRef<Record<string, unknown>>({});
   const cancelledRef = useRef(false);
   const executingRef = useRef(false);
+
+  useEffect(() => {
+    ctxRef.current = ctx;
+  }, [ctx]);
 
   useEffect(() => {
     if (!script) return;
@@ -36,12 +41,12 @@ export function TutorialRunner({ script, mode, onComplete, onCancel }: Props) {
     async (step: TutorialStep) => {
       executingRef.current = true;
       try {
-        if (step.run) await step.run(ctx, memoRef.current);
+        if (step.run) await step.run(ctxRef.current, memoRef.current);
       } finally {
         executingRef.current = false;
       }
     },
-    [ctx],
+    [],
   );
 
   useEffect(() => {

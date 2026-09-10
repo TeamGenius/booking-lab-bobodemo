@@ -24,7 +24,6 @@ import { useMutation, useQuery } from 'urql';
 import {
   MAKE_SELECTIONS_MUTATION,
   SITES_QUERY,
-  START_SESSION_MUTATION,
 } from '../client/gql';
 import { useBookingActions } from '../shared/BookingActionsContext';
 import { InfoTooltip } from '../shared/InfoTooltip';
@@ -69,9 +68,8 @@ const SERVICE_TAGS: Record<string, Array<{ label: string; color: string }>> = {
 export function ServicesPage() {
   const navigate = useNavigate();
   const { setAction } = useBookingActions();
-  const { sessionId, setSessionId } = useSessionContext();
+  const { sessionId } = useSessionContext();
   const [sitesResult] = useQuery<{ sites: Site[] }>({ query: SITES_QUERY });
-  const [, startSession] = useMutation(START_SESSION_MUTATION);
   const [, makeSelections] = useMutation(MAKE_SELECTIONS_MUTATION);
 
   const [selectedSiteId, setSelectedSiteId] = useState<string | null>(
@@ -97,24 +95,6 @@ export function ServicesPage() {
       setSelectedSiteId(null);
       setSelectedServiceId(null);
     }
-  }, [sessionId]);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      if (!sessionId) {
-        const res = await startSession({});
-        if (!cancelled && res.data?.startBookingSession?.id) {
-          setSessionId(res.data.startBookingSession.id);
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-    // Re-run when sessionId flips to null (e.g. tutorial Reset Lab) so the
-    // page doesn't stay stuck on the loader.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId]);
 
   const sites = sitesResult.data?.sites ?? [];

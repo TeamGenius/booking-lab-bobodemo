@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useClient } from 'urql';
 import {
@@ -45,7 +45,7 @@ export type TutorialCtx = {
   }) => Promise<FinalizeResult>;
   claimGift: (claimToken: string, recipientEmail: string) => Promise<string>;
   scheduleClaimed: (claimToken: string) => Promise<void>;
-  reset: () => void;
+  reset: () => Promise<void>;
 };
 
 const isVisible = (el: HTMLElement) => {
@@ -70,7 +70,7 @@ async function pollForSelector(
 export function useTutorialCtx(): TutorialCtx {
   const client = useClient();
   const navigate = useNavigate();
-  const { sessionId, setSessionId } = useSessionContext();
+  const { sessionId, resetSession } = useSessionContext();
   const sessionRef = useRef<string | null>(sessionId);
   useEffect(() => {
     sessionRef.current = sessionId;
@@ -117,13 +117,25 @@ export function useTutorialCtx(): TutorialCtx {
   }, []);
 
   const pickFirstSlotViaUI = useCallback(async () => {
-    const slot = await pollForSelector(
-      '[data-tour-slot]:not([data-tour-slot=""])',
-      8000,
-    );
+    const serviceId = window.localStorage.getItem(KEY_SVC);
+    if (!serviceId) throw new Error('No selected service for tutorial');
+    const slotsResult = await client
+      .query(AVAILABLE_SLOTS_QUERY, { serviceId }, { requestPolicy: 'network-only' })
+      .toPromise();
+    const firstSlot = (
+      slotsResult.data?.availableSlots as Array<{ id: string; startsAt: string }> | undefined
+    )?.[0];
+    if (!firstSlot) throw new Error('No available slots for tutorial');
+
+    const slotDate = new Date(firstSlot.startsAt);
+    const dateKey = `${slotDate.getFullYear()}-${String(slotDate.getMonth() + 1).padStart(2, '0')}-${String(slotDate.getDate()).padStart(2, '0')}`;
+    const dateButton = await pollForSelector(`[data-tour-date="${dateKey}"]`, 8000);
+    dateButton.click();
+
+    const slot = await pollForSelector(`[data-tour-slot="${firstSlot.id}"]`, 8000);
     slot.click();
     await new Promise((r) => setTimeout(r, 150));
-  }, []);
+  }, [client]);
 
   const clickPrimaryAction = useCallback(async () => {
     await clickSelector('[data-tour="primary-action"]:not([disabled])', 8000);
@@ -223,28 +235,51 @@ export function useTutorialCtx(): TutorialCtx {
     [client],
   );
 
-  const reset = useCallback(() => {
-    sessionRef.current = null;
-    setSessionId(null);
+  const reset = useCallback(async () => {
     window.localStorage.removeItem(KEY_SITE);
     window.localStorage.removeItem(KEY_SVC);
     navigate('/booking', { replace: true });
-  }, [navigate, setSessionId]);
+    const id = await resetSession();
+    sessionRef.current = id;
+  }, [navigate, resetSession]);
 
-  return {
-    navigate: (to, opts) => navigate(to, opts),
-    getSessionId,
-    waitForSelector,
-    clickSelector,
-    pickSiteAndServiceViaUI,
-    pickFirstSlotViaUI,
-    clickPrimaryAction,
-    waitForSession,
-    setMode,
-    payAndFinalize,
-    finalizeGift,
-    claimGift,
-    scheduleClaimed,
-    reset,
-  };
+  const navigateTo = useCallback<TutorialCtx['navigate']>(
+    (to, opts) => navigate(to, opts),
+    [navigate],
+  );
+
+  return useMemo(
+    () => ({
+      navigate: navigateTo,
+      getSessionId,
+      waitForSelector,
+      clickSelector,
+      pickSiteAndServiceViaUI,
+      pickFirstSlotViaUI,
+      clickPrimaryAction,
+      waitForSession,
+      setMode,
+      payAndFinalize,
+      finalizeGift,
+      claimGift,
+      scheduleClaimed,
+      reset,
+    }),
+    [
+      navigateTo,
+      getSessionId,
+      waitForSelector,
+      clickSelector,
+      pickSiteAndServiceViaUI,
+      pickFirstSlotViaUI,
+      clickPrimaryAction,
+      waitForSession,
+      setMode,
+      payAndFinalize,
+      finalizeGift,
+      claimGift,
+      scheduleClaimed,
+      reset,
+    ],
+  );
 }
