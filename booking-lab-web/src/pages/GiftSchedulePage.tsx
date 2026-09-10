@@ -14,26 +14,26 @@ import {
   Text,
   ThemeIcon,
   Title,
-} from '@mantine/core';
+} from "@mantine/core";
 import {
   IconArrowRight,
   IconCheck,
   IconGift,
   IconInfoCircle,
   IconLock,
-} from '@tabler/icons-react';
-import { useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { useMutation, useQuery } from 'urql';
+} from "@tabler/icons-react";
+import { useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useMutation, useQuery } from "urql";
 import {
   AVAILABLE_SLOTS_QUERY,
   GIFT_PREVIEW_QUERY,
   SCHEDULE_CLAIMED_MUTATION,
-} from '../client/gql';
-import { FlowBadge } from '../shared/FlowBadge';
-import { InfoTooltip } from '../shared/InfoTooltip';
-import { RequirementRef } from '../shared/RequirementRef';
-import { SelectionCard } from '../shared/SelectionCard';
+} from "../client/gql";
+import { FlowBadge } from "../shared/FlowBadge";
+import { InfoTooltip } from "../shared/InfoTooltip";
+import { RequirementRef } from "../shared/RequirementRef";
+import { TimeSelect } from "../shared/TimeSelect";
 
 type Preview = {
   id: string;
@@ -46,47 +46,51 @@ type Preview = {
     slotId: string | null;
   };
   site: { name: string; city: string; addressLine: string } | null;
-  service: { id: string; name: string; description: string; durationMinutes: number } | null;
+  service: {
+    id: string;
+    name: string;
+    description: string;
+    durationMinutes: number;
+  } | null;
   slot: { id: string; startsAt: string; employeeName: string } | null;
 };
 
-type Slot = { id: string; serviceId: string; startsAt: string; employeeName: string };
+type Slot = {
+  id: string;
+  serviceId: string;
+  startsAt: string;
+  employeeName: string;
+};
 
-function fmtDay(iso: string) {
-  const d = new Date(iso);
-  return d.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
-}
-function fmtTime(iso: string) {
-  const d = new Date(iso);
-  return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
-}
 function fmtSlot(iso: string) {
   const d = new Date(iso);
   return d.toLocaleString(undefined, {
-    weekday: 'long',
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
   });
 }
 
 export function GiftSchedulePage() {
   const navigate = useNavigate();
-  const { token = '' } = useParams();
+  const { token = "" } = useParams();
 
-  const [claimResult, refetchClaim] = useQuery<{ getGiftBookingPreview: Preview | null }>({
+  const [claimResult, refetchClaim] = useQuery<{
+    getGiftBookingPreview: Preview | null;
+  }>({
     query: GIFT_PREVIEW_QUERY,
     variables: { bookingId: token },
     pause: !token,
-    requestPolicy: 'network-only',
+    requestPolicy: "network-only",
   });
   const claim = claimResult.data?.getGiftBookingPreview ?? null;
   const serviceId = claim?.service?.id ?? null;
 
   const [slotsResult] = useQuery<{ availableSlots: Slot[] }>({
     query: AVAILABLE_SLOTS_QUERY,
-    variables: { serviceId: serviceId ?? '' },
+    variables: { serviceId: serviceId ?? "" },
     pause: !serviceId,
   });
 
@@ -95,25 +99,17 @@ export function GiftSchedulePage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const byDay = useMemo(() => {
-    const groups = new Map<string, Slot[]>();
-    (slotsResult.data?.availableSlots ?? []).forEach((slot) => {
-      const key = fmtDay(slot.startsAt);
-      const arr = groups.get(key) ?? [];
-      arr.push(slot);
-      groups.set(key, arr);
-    });
-    return Array.from(groups.entries());
-  }, [slotsResult.data]);
-
   async function handleConfirm() {
     if (!selectedSlotId) return;
     setSubmitting(true);
     setError(null);
     try {
-      const res = await scheduleClaimed({ bookingId: token, slotId: selectedSlotId });
+      const res = await scheduleClaimed({
+        bookingId: token,
+        slotId: selectedSlotId,
+      });
       if (res.error) throw res.error;
-      await refetchClaim({ requestPolicy: 'network-only' });
+      await refetchClaim({ requestPolicy: "network-only" });
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -141,10 +137,14 @@ export function GiftSchedulePage() {
     );
   }
 
-  if (claim.status === 'PAID_AWAITING_CLAIM') {
+  if (claim.status === "PAID_AWAITING_CLAIM") {
     return (
       <Container size="sm" py="xl">
-        <Alert color="yellow" variant="light" icon={<IconInfoCircle size={16} />}>
+        <Alert
+          color="yellow"
+          variant="light"
+          icon={<IconInfoCircle size={16} />}
+        >
           You need to sign in first.
         </Alert>
         <Button mt="md" onClick={() => navigate(`/gift/${token}`)}>
@@ -154,7 +154,7 @@ export function GiftSchedulePage() {
     );
   }
 
-  if (claim.status === 'CONFIRMED' && claim.slot) {
+  if (claim.status === "CONFIRMED" && claim.slot) {
     return (
       <Container size="md" py="lg">
         <Group justify="space-between" mb="md">
@@ -195,10 +195,15 @@ export function GiftSchedulePage() {
                 {fmtSlot(claim.slot.startsAt)}
               </Text>
             </Group>
-            <Alert color="purple" variant="light" icon={<IconGift size={16} />} mt="xs">
-              Included and paid by{' '}
-              <b>{claim.selections.purchaserName ?? 'the purchaser'}</b>. You'll get a
-              reminder the day before. Post-visit surveys go to you{' '}
+            <Alert
+              color="purple"
+              variant="light"
+              icon={<IconGift size={16} />}
+              mt="xs"
+            >
+              Included and paid by{" "}
+              <b>{claim.selections.purchaserName ?? "the purchaser"}</b>. You'll
+              get a reminder the day before. Post-visit surveys go to you{" "}
               <RequirementRef code="FR-8" />.
             </Alert>
           </Stack>
@@ -213,17 +218,21 @@ export function GiftSchedulePage() {
         radius="md"
         p="md"
         mb="lg"
-        style={{ background: 'var(--mantine-color-purple-0)' }}
+        style={{ background: "var(--mantine-color-purple-0)" }}
       >
         <Group justify="space-between" wrap="nowrap">
           <Group gap="xs">
             <IconGift size={20} color="var(--mantine-color-purple-8)" />
             <Text size="sm" c="purple.9">
-              <b>{claim.service?.name}</b> — gifted by{' '}
-              <b>{claim.selections.purchaserName ?? 'a friend'}</b>
+              <b>{claim.service?.name}</b> — gifted by{" "}
+              <b>{claim.selections.purchaserName ?? "a friend"}</b>
             </Text>
           </Group>
-          <Badge color="purple" variant="light" leftSection={<IconLock size={12} />}>
+          <Badge
+            color="purple"
+            variant="light"
+            leftSection={<IconLock size={12} />}
+          >
             Recipient view — pricing hidden
           </Badge>
         </Group>
@@ -271,7 +280,7 @@ export function GiftSchedulePage() {
         </Text>
         <Divider my="sm" />
         <Text size="xs" c="dimmed">
-          Included and paid by the Purchaser. Pricing is not shown to Recipients{' '}
+          Included and paid by the Purchaser. Pricing is not shown to Recipients{" "}
           <RequirementRef code="FR-7" />.
         </Text>
       </Card>
@@ -282,25 +291,14 @@ export function GiftSchedulePage() {
         </Alert>
       )}
 
-      <Stack gap="lg">
-        {byDay.map(([day, slots]) => (
-          <Box key={day}>
-            <Text fw={600} mb="xs">
-              {day}
-            </Text>
-            <Group gap="sm">
-              {slots.map((slot) => (
-                <SelectionCard
-                  key={slot.id}
-                  title={fmtTime(slot.startsAt)}
-                  selected={selectedSlotId === slot.id}
-                  onClick={() => setSelectedSlotId(slot.id)}
-                />
-              ))}
-            </Group>
-          </Box>
-        ))}
-      </Stack>
+      <TimeSelect
+        slots={slotsResult.data?.availableSlots ?? []}
+        loading={slotsResult.fetching}
+        selectedSlotId={selectedSlotId}
+        onSelect={setSelectedSlotId}
+        label="Date and Time"
+        durationMinutes={claim.service?.durationMinutes ?? null}
+      />
 
       <Paper withBorder radius="md" p="md" mt="lg" bg="white">
         <Group justify="flex-end">
