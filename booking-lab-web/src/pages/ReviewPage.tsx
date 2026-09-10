@@ -99,6 +99,7 @@ export function ReviewPage() {
       ? 'GIFT_SCHEDULE_LATER'
       : 'GIFT_SCHEDULE_NOW',
   );
+  const [modeInitialized, setModeInitialized] = useState(false);
   const mode: Mode = forWho === 'ME' ? 'SELF' : otherMode;
 
   const [recipientName, setRecipientName] = useState(session?.selections.recipientName ?? '');
@@ -114,10 +115,19 @@ export function ReviewPage() {
   const [heardAbout, setHeardAbout] = useState<string | null>('Yelp / Review Website');
   const [heardAboutMore, setHeardAboutMore] = useState<string | null>('Yelp');
 
+  useEffect(() => {
+    if (!session || modeInitialized) return;
+    setForWho(session.selections.mode === 'SELF' ? 'ME' : 'OTHER');
+    if (session.selections.mode !== 'SELF') {
+      setOtherMode(session.selections.mode);
+    }
+    setModeInitialized(true);
+  }, [session, modeInitialized]);
+
   // Persist mode to server whenever it changes so all screens stay in sync.
   // Phase 1B has no slot — clear any leftover slot from a prior Phase 1A visit.
   useEffect(() => {
-    if (!sessionId || !session) return;
+    if (!sessionId || !session || !modeInitialized) return;
     if (session.selections.mode !== mode) {
       const patch: Record<string, unknown> = { mode, isGiftBooking: mode !== 'SELF' };
       if (mode === 'GIFT_SCHEDULE_LATER') patch.slotId = null;
@@ -125,7 +135,7 @@ export function ReviewPage() {
     } else if (mode === 'GIFT_SCHEDULE_LATER' && session.selections.slotId) {
       void makeSelections({ sessionId, input: { slotId: null } });
     }
-  }, [mode, sessionId, session, makeSelections]);
+  }, [mode, modeInitialized, sessionId, session, makeSelections]);
 
   const discountCents = mode === 'SELF' ? 5100 : 0;
   const total = useMemo(

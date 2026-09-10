@@ -102,6 +102,15 @@ export function SchedulePage() {
     await makeSelections({ sessionId, input: { slotId: selectedSlotId } });
     navigate('/booking/review');
   }
+
+  async function handleGiftScheduleLater() {
+    if (!sessionId) return;
+    await makeSelections({
+      sessionId,
+      input: { mode: 'GIFT_SCHEDULE_LATER', isGiftBooking: true, slotId: null },
+    });
+    navigate('/booking/review');
+  }
 // Recover from stale sessionId when the server-side session is gone (e.g. tsx restart).
   const sessionMissing =
     !sessionResult.fetching && !sessionResult.error && sessionId && !session;
@@ -294,7 +303,7 @@ export function SchedulePage() {
               variant="light"
               color="purple"
               leftSection={<IconGift size={16} />}
-              onClick={() => navigate('/booking/review')}
+              onClick={() => void handleGiftScheduleLater()}
             >
               Send as gift · they pick time
             </Button>
