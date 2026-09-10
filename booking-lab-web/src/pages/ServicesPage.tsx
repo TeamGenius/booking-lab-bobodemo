@@ -90,6 +90,15 @@ export function ServicesPage() {
     else window.localStorage.removeItem(SVC_KEY);
   }, [selectedServiceId]);
 
+  // Reset Lab (from the tutorial drawer) sets sessionId=null; clear local
+  // selection state too so the page returns to the Choose Location view.
+  useEffect(() => {
+    if (!sessionId) {
+      setSelectedSiteId(null);
+      setSelectedServiceId(null);
+    }
+  }, [sessionId]);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -103,8 +112,10 @@ export function ServicesPage() {
     return () => {
       cancelled = true;
     };
+    // Re-run when sessionId flips to null (e.g. tutorial Reset Lab) so the
+    // page doesn't stay stuck on the loader.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [sessionId]);
 
   const sites = sitesResult.data?.sites ?? [];
   const site = sites.find((s) => s.id === selectedSiteId);
