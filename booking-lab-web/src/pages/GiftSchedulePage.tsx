@@ -192,7 +192,7 @@ export function GiftSchedulePage() {
             <Group justify="space-between">
               <Text size="sm">When</Text>
               <Text size="sm" fw={500}>
-                {fmtSlot(claim.slot.startsAt)} · {claim.slot.employeeName}
+                {fmtSlot(claim.slot.startsAt)}
               </Text>
             </Group>
             <Alert color="purple" variant="light" icon={<IconGift size={16} />} mt="xs">
@@ -293,7 +293,6 @@ export function GiftSchedulePage() {
                 <SelectionCard
                   key={slot.id}
                   title={fmtTime(slot.startsAt)}
-                  description={`with ${slot.employeeName}`}
                   selected={selectedSlotId === slot.id}
                   onClick={() => setSelectedSlotId(slot.id)}
                 />

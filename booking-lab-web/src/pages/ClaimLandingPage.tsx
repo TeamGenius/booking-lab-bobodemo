@@ -8,9 +8,9 @@ import {
   Group,
   Loader,
   Paper,
-  Radio,
   Stack,
   Text,
+  TextInput,
   Title,
 } from '@mantine/core';
 import {
@@ -20,7 +20,7 @@ import {
   IconLock,
   IconUserCircle,
 } from '@tabler/icons-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery } from 'urql';
 import { CLAIM_GIFT_MUTATION, GIFT_PREVIEW_QUERY } from '../client/gql';
@@ -41,16 +41,6 @@ type Preview = {
   service: { name: string; description: string; durationMinutes: number } | null;
 };
 
-type Identity = { id: string; name: string; email: string; isActual?: boolean };
-
-// Demo-only stand-ins for other users the recipient could switch between to
-// exercise the self-gift guard and non-recipient guard.
-const MOCK_IDENTITIES: Identity[] = [
-  { id: 'user_alex', name: 'Alex Rivera', email: 'alex@example.com' },
-  { id: 'user_taylor', name: 'Taylor Kim', email: 'taylor@example.com' },
-  { id: 'user_jamie', name: 'Jamie Chen', email: 'jamie.chen@example.com' },
-];
-
 // Purchaser identity from ReviewPage — used to detect self-gift on the client.
 const PURCHASER_MOCK_EMAIL = 'jamie.chen@example.com';
 
@@ -67,54 +57,35 @@ export function ClaimLandingPage() {
 
   const [, claimGift] = useMutation(CLAIM_GIFT_MUTATION);
 
-  // Build the identity list: the actual gift recipient (if the purchaser
-  // provided one on Review) shows up first and is pre-selected. Extra mock
-  // users are appended so you can still demo the guardrails (self-gift block,
-  // wrong-recipient block).
-  const identities = useMemo<Identity[]>(() => {
-    const list: Identity[] = [];
-    const actualEmail = claim?.selections.recipientEmail?.trim();
-    const actualName = claim?.selections.recipientName?.trim();
-    if (actualEmail) {
-      list.push({
-        id: 'actual_recipient',
-        name: actualName || actualEmail,
-        email: actualEmail,
-        isActual: true,
-      });
-    }
-    for (const m of MOCK_IDENTITIES) {
-      if (actualEmail && m.email.toLowerCase() === actualEmail.toLowerCase()) continue;
-      list.push(m);
-    }
-    return list;
-  }, [claim?.selections.recipientEmail, claim?.selections.recipientName]);
-
-  const [selectedRecipientId, setSelectedRecipientId] = useState<string>('');
+  const [recipientName, setRecipientName] = useState('');
+  const [recipientEmail, setRecipientEmail] = useState('');
   useEffect(() => {
-    if (!selectedRecipientId && identities.length > 0) {
-      setSelectedRecipientId(identities[0]!.id);
-    }
-  }, [identities, selectedRecipientId]);
+    if (!claim) return;
+    setRecipientName(claim.selections.recipientName?.trim() ?? '');
+    setRecipientEmail(claim.selections.recipientEmail?.trim() ?? '');
+  }, [claim?.id, claim?.selections.recipientEmail, claim?.selections.recipientName]);
 
-  const selectedRecipient = useMemo(
-    () => identities.find((r) => r.id === selectedRecipientId) ?? identities[0],
-    [identities, selectedRecipientId],
-  );
+  const trimmedName = recipientName.trim();
+  const trimmedEmail = recipientEmail.trim();
+  const hasValidEmail = /^\S+@\S+\.\S+$/.test(trimmedEmail);
+  const formIsValid = trimmedName.length > 0 && hasValidEmail;
   const isSelfGift =
-    !!selectedRecipient &&
-    selectedRecipient.email.toLowerCase() === PURCHASER_MOCK_EMAIL.toLowerCase();
+    trimmedEmail.toLowerCase() === PURCHASER_MOCK_EMAIL.toLowerCase();
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function handleSignInAndClaim() {
-    if (!token || !selectedRecipient || isSelfGift) return;
+    if (!token || !formIsValid || isSelfGift) return;
     setSubmitting(true);
     setError(null);
     try {
       const res = await claimGift({
-        input: { bookingId: token, recipientEmail: selectedRecipient.email },
+        input: {
+          bookingId: token,
+          recipientName: trimmedName,
+          recipientEmail: trimmedEmail,
+        },
       });
       if (res.error) throw res.error;
       navigate(`/gift/${token}/schedule`);
@@ -186,41 +157,35 @@ export function ClaimLandingPage() {
           <Stack gap="md">
             <Group gap={6}>
               <IconUserCircle size={18} />
-              <Title order={4}>Choose your identity (mock JWT)</Title>
-              <InfoTooltip label="claimGiftBooking is [Authorize] on the User scheme — the Recipient's userId is set from their JWT, never from a form. Two guards fire server-side: (1) reject when booking.userId != null (already claimed) and (2) reject when caller matches purchaser (self-gift loophole — Spec §9, §10 Resolved #1/#7). The claim URL is the raw BookingId GUID; security relies on GUID entropy + auth + per-user rate limit on claimGiftBooking. Spec §7.4, §9." />
+              <Title order={4}>Your sign-in details</Title>
+              <Badge color="green" variant="light" size="xs">
+                Demo sign-in
+              </Badge>
+              <InfoTooltip label="This editable demo form represents the recipient profile returned after authentication. In production, claimGiftBooking is authorized with the User scheme and the recipient userId comes from their JWT, not these fields. The claim also blocks the purchaser from claiming their own gift." />
             </Group>
-            <Radio.Group
-              value={selectedRecipientId}
-              onChange={setSelectedRecipientId}
-            >
-              <Stack gap="xs">
-                {identities.map((r) => (
-                  <Radio
-                    key={r.id}
-                    value={r.id}
-                    color="purple"
-                    label={
-                      <Group gap={8}>
-                        <Text fw={600}>{r.name}</Text>
-                        <Text size="xs" c="dimmed">
-                          {r.email}
-                        </Text>
-                        {r.isActual && (
-                          <Badge color="green" variant="light" size="xs">
-                            = Actual recipient
-                          </Badge>
-                        )}
-                        {r.email.toLowerCase() === PURCHASER_MOCK_EMAIL.toLowerCase() && (
-                          <Badge color="red" variant="light" size="xs">
-                            = Purchaser (self-gift)
-                          </Badge>
-                        )}
-                      </Group>
-                    }
-                  />
-                ))}
-              </Stack>
-            </Radio.Group>
+            <Text size="sm" c="dimmed">
+              We prefilled the details entered by the purchaser. You can correct them
+              before continuing.
+            </Text>
+            <TextInput
+              label="Full name"
+              placeholder="Recipient name"
+              value={recipientName}
+              onChange={(event) => setRecipientName(event.currentTarget.value)}
+              error={recipientName.length > 0 && !trimmedName ? 'Enter your name' : undefined}
+              autoComplete="name"
+              required
+            />
+            <TextInput
+              label="Email address"
+              placeholder="name@example.com"
+              type="email"
+              value={recipientEmail}
+              onChange={(event) => setRecipientEmail(event.currentTarget.value)}
+              error={recipientEmail.length > 0 && !hasValidEmail ? 'Enter a valid email address' : undefined}
+              autoComplete="email"
+              required
+            />
 
             {isSelfGift && (
               <Alert color="red" variant="light" icon={<IconInfoCircle size={16} />}>
@@ -248,7 +213,7 @@ export function ClaimLandingPage() {
                 color="purple"
                 onClick={handleSignInAndClaim}
                 loading={submitting}
-                disabled={isSelfGift}
+                disabled={!formIsValid || isSelfGift}
                 rightSection={<IconArrowRight size={16} />}
               >
                 {alreadyClaimed ? 'Continue to schedule' : 'Sign in & claim'}

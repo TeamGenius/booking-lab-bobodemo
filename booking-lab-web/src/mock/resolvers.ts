@@ -151,7 +151,7 @@ export const resolvers = {
 
     claimGiftBooking: (
       _: unknown,
-      args: { input: { bookingId: string; recipientEmail: string } },
+      args: { input: { bookingId: string; recipientName?: string; recipientEmail: string } },
     ) => {
       const s = store.getSessionByClaimToken(args.input.bookingId);
       if (!s) throw new Error('Invalid gift booking');
@@ -163,7 +163,10 @@ export const resolvers = {
         s.selections.purchaserEmail.toLowerCase() === args.input.recipientEmail.toLowerCase()
       )
         throw new Error('Self-gift blocked: Purchaser cannot claim their own gift');
-      store.updateSelections(s.id, { recipientEmail: args.input.recipientEmail });
+      store.updateSelections(s.id, {
+        recipientName: args.input.recipientName?.trim() || s.selections.recipientName,
+        recipientEmail: args.input.recipientEmail,
+      });
       store.setStatus(s.id, 'CLAIMED_AWAITING_SCHEDULE');
       return store.getSession(s.id)!;
     },

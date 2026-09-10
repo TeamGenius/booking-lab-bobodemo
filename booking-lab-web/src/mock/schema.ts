@@ -140,6 +140,7 @@ export const typeDefs = /* GraphQL */ `
     """
     Mock recipient identity — in production this comes from the recipient's JWT.
     """
+    recipientName: String
     recipientEmail: String!
   }
 

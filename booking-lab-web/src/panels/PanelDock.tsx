@@ -33,7 +33,7 @@ export function PanelDock() {
         }}
       >
         <Group gap={4}>
-          <Tooltip label="Tutorial" position="left" withArrow>
+          <Tooltip label="Tutorial" position="top" withArrow>
             <ActionIcon
               variant={open === 'tutorial' ? 'filled' : 'subtle'}
               color="purple"
@@ -45,7 +45,7 @@ export function PanelDock() {
               <IconPlayerPlay size={18} />
             </ActionIcon>
           </Tooltip>
-          <Tooltip label="Staff view" position="left" withArrow>
+          <Tooltip label="Staff view" position="top" withArrow>
             <ActionIcon
               variant={open === 'staff' ? 'filled' : 'subtle'}
               color="teal"
@@ -57,7 +57,7 @@ export function PanelDock() {
               <IconBookmark size={18} />
             </ActionIcon>
           </Tooltip>
-          <Tooltip label="Backend delta" position="left" withArrow>
+          <Tooltip label="Backend delta" position="top" withArrow>
             <ActionIcon
               variant={open === 'delta' ? 'filled' : 'subtle'}
               color="orange"
@@ -69,7 +69,7 @@ export function PanelDock() {
               <IconBug size={18} />
             </ActionIcon>
           </Tooltip>
-          <Tooltip label="Search docs & code" position="left" withArrow>
+          <Tooltip label="Search docs & code" position="top" withArrow>
             <ActionIcon
               variant={open === 'docs' ? 'filled' : 'subtle'}
               color="blue"
