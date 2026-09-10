@@ -1,4 +1,4 @@
-import { Button, Group, Paper, Progress, Text } from '@mantine/core';
+import { Badge, Button, Group, Paper, Progress, Text } from '@mantine/core';
 import { IconPlayerPause, IconPlayerPlay, IconX } from '@tabler/icons-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Spotlight } from './Spotlight';
@@ -6,6 +6,10 @@ import type { TutorialScript, TutorialStep } from './scripts';
 import { useTutorialCtx } from './useTutorialCtx';
 
 export type TutorialMode = 'auto' | 'guided';
+type AutoPhase = 'explaining' | 'acting' | 'reviewing';
+
+const AUTO_READING_TIME_MS = 2500;
+const AUTO_REVIEW_TIME_MS = 3000;
 
 type Props = {
   script: TutorialScript | null;
@@ -19,6 +23,7 @@ export function TutorialRunner({ script, mode, onComplete, onCancel }: Props) {
   const ctxRef = useRef(ctx);
   const [stepIdx, setStepIdx] = useState(0);
   const [running, setRunning] = useState(true);
+  const [autoPhase, setAutoPhase] = useState<AutoPhase>('explaining');
   const [error, setError] = useState<string | null>(null);
   const memoRef = useRef<Record<string, unknown>>({});
   const cancelledRef = useRef(false);
@@ -35,6 +40,7 @@ export function TutorialRunner({ script, mode, onComplete, onCancel }: Props) {
     cancelledRef.current = false;
     setError(null);
     setRunning(true);
+    setAutoPhase('explaining');
   }, [script]);
 
   const executeStep = useCallback(
@@ -58,13 +64,18 @@ export function TutorialRunner({ script, mode, onComplete, onCancel }: Props) {
     let cancelled = false;
     (async () => {
       try {
+        setAutoPhase('explaining');
+        await new Promise((resolve) => window.setTimeout(resolve, AUTO_READING_TIME_MS));
+        if (cancelled || cancelledRef.current) return;
+        setAutoPhase('acting');
         await executeStep(step);
         if (cancelled || cancelledRef.current) return;
+        setAutoPhase('reviewing');
         window.setTimeout(() => {
           if (cancelled || cancelledRef.current) return;
           if (stepIdx + 1 >= script.steps.length) onComplete();
           else setStepIdx(stepIdx + 1);
-        }, step.waitMs ?? 700);
+        }, Math.max(step.waitMs ?? 0, AUTO_REVIEW_TIME_MS));
       } catch (e) {
         setError((e as Error).message);
         setRunning(false);
@@ -95,8 +106,8 @@ export function TutorialRunner({ script, mode, onComplete, onCancel }: Props) {
 
   return (
     <>
-      {mode === 'guided' && step.target && (
-        <Spotlight target={step.target} caption={step.caption} detail={step.detail} />
+      {step.target && (mode === 'guided' || autoPhase === 'explaining') && (
+        <Spotlight target={step.target} />
       )}
       <Paper
         withBorder
@@ -146,6 +157,15 @@ export function TutorialRunner({ script, mode, onComplete, onCancel }: Props) {
           </Group>
         </Group>
         <Progress value={progress} size="xs" color="purple" mb="xs" />
+        {mode === 'auto' && (
+          <Badge color={autoPhase === 'acting' ? 'orange' : 'purple'} variant="light" size="xs" mb={6}>
+            {autoPhase === 'explaining'
+              ? 'Read this step'
+              : autoPhase === 'acting'
+                ? 'Performing the action'
+                : 'Review what changed'}
+          </Badge>
+        )}
         <Text fw={700} size="sm">
           {step.caption}
         </Text>

@@ -14,12 +14,8 @@ function selectorRect(selector: string | undefined): Rect | null {
 
 export function Spotlight({
   target,
-  caption,
-  detail,
 }: {
   target?: string;
-  caption: string;
-  detail?: string;
 }) {
   const [rect, setRect] = useState<Rect | null>(() => selectorRect(target));
 
@@ -83,25 +79,6 @@ export function Spotlight({
           }}
         />
       )}
-      <div
-        style={{
-          position: 'absolute',
-          bottom: 24,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          background: 'white',
-          borderRadius: 12,
-          padding: '10px 16px',
-          boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
-          maxWidth: 480,
-          pointerEvents: 'auto',
-        }}
-      >
-        <div style={{ fontWeight: 700, fontSize: 14 }}>{caption}</div>
-        {detail && (
-          <div style={{ fontSize: 12, opacity: 0.7, marginTop: 4 }}>{detail}</div>
-        )}
-      </div>
     </div>,
     document.body,
   );

@@ -38,8 +38,8 @@ export function TutorialDrawer({ opened, onClose }: Props) {
       }
     >
       <Text size="xs" c="dimmed" mb="sm">
-        Pick a flow. Auto plays hands-free with a caption bar; Guided lands a
-        spotlight on the current UI and waits for Next.
+        Pick a flow. Auto pauses to explain each step, performs the action, then
+        gives you time to review the result. Guided waits for you to select Next.
       </Text>
 
       <Stack gap="sm">
