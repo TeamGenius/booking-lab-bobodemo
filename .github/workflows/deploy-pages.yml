@@ -25,10 +25,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
-      # Use `npm install` (not `npm ci`) so the runner's platform-specific
-      # optional deps (rolldown native bindings for linux-x64-gnu) are
-      # resolved from the registry. See npm/cli#4828.
+      # npm/cli#4828: the lockfile generated on macOS omits Linux native
+      # bindings for rolldown; delete it so npm resolves the runner's
+      # platform-specific optional deps from scratch.
+      - name: Reset lockfile and install
+        working-directory: .
+        run: rm -f package-lock.json booking-lab-web/package-lock.json booking-lab-server/package-lock.json
       - run: npm install --no-audit --no-fund
       - run: npm run build
       - uses: actions/upload-pages-artifact@v3
