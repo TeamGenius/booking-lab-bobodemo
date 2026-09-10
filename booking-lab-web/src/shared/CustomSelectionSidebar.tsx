@@ -101,7 +101,6 @@ export function CustomSelectionSidebar() {
 
   const progressPct = (() => {
     const idx = TIERS.indexOf(currentTier);
-    const nextIdx = upcoming ? TIERS.indexOf(upcoming) : TIERS.length - 1;
     if (!upcoming) return 100;
     const currentThreshold = currentTier.threshold;
     const nextThreshold = upcoming.threshold;
@@ -276,7 +275,7 @@ export function CustomSelectionSidebar() {
             {TIERS.map((t) => (
               <Text
                 key={t.label}
-                size={9}
+                size="xs"
                 fw={t.pct === currentTier.pct ? 700 : 500}
                 c={t.pct === currentTier.pct ? 'orange.7' : 'dimmed'}
               >
@@ -286,7 +285,7 @@ export function CustomSelectionSidebar() {
           </Group>
           <Group justify="space-between" px={2} mb="md">
             {TIERS.map((t) => (
-              <Text key={`th-${t.label}`} size={9} c="dimmed">
+              <Text key={`th-${t.label}`} size="xs" c="dimmed">
                 {t.threshold === 0 ? '$0' : `$${Math.round(t.threshold / 100)}`}
               </Text>
             ))}

@@ -1,0 +1,42 @@
+# Render Blueprint — deploys the Booking Lab sandbox as two services:
+#   1. booking-lab-server (Node web service, graphql-yoga)
+#   2. booking-lab-web (static site, Vite build)
+#
+# One-click deploy: push this file, then visit
+# https://dashboard.render.com/select-repo?type=blueprint
+services:
+  - type: web
+    name: booking-lab-server
+    runtime: node
+    rootDir: booking-lab-server
+    buildCommand: npm install
+    startCommand: npm start
+    plan: free
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: CORS_ORIGINS
+        # Filled in after the static site URL is known; '*' is fine for a demo.
+        value: "*"
+
+  - type: web
+    name: booking-lab-web
+    runtime: static
+    rootDir: booking-lab-web
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    plan: free
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: VITE_GRAPHQL_URL
+        # Point at the deployed server. Update after first deploy if the
+        # generated URL differs, or set this manually in the Render dashboard.
+        fromService:
+          type: web
+          name: booking-lab-server
+          property: hostport
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

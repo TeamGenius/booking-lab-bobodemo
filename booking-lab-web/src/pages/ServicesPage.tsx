@@ -3,18 +3,15 @@ import {
   Anchor,
   Badge,
   Box,
-  Button,
   Card,
   Container,
   Group,
   Loader,
-  Paper,
   SimpleGrid,
   Text,
   ThemeIcon,
 } from '@mantine/core';
 import {
-  IconArrowRight,
   IconBuilding,
   IconCircleCheck,
   IconClock,
