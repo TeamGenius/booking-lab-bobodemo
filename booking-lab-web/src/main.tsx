@@ -13,6 +13,7 @@ import './index.css';
 import { BookingActionsProvider } from './shared/BookingActionsContext';
 import { SessionProvider } from './shared/SessionContext';
 import { theme } from './theme';
+import { TutorialProvider } from './tutorial/TutorialContext';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -22,7 +23,9 @@ createRoot(document.getElementById('root')!).render(
         <SessionProvider>
           <BookingActionsProvider>
             <HashRouter>
-              <App />
+              <TutorialProvider>
+                <App />
+              </TutorialProvider>
             </HashRouter>
           </BookingActionsProvider>
         </SessionProvider>

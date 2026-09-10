@@ -225,7 +225,7 @@ export function ServicesPage() {
         </Group>
       </Group>
 
-      <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md" mb="lg">
+      <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md" mb="lg" data-tour="service-grid">
         {site.services.map((svc) => (
           <ServiceCard
             key={svc.id}

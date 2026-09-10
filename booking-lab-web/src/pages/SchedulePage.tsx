@@ -245,7 +245,7 @@ export function SchedulePage() {
           </Text>
         </Group>
       ) : (
-        <SimpleGrid cols={{ base: 2, sm: 3, md: 4 }} spacing="sm">
+        <SimpleGrid cols={{ base: 2, sm: 3, md: 4 }} spacing="sm" data-tour="slot-grid">
           {slotsForSelectedDay.map((slot) => {
             const t = new Date(slot.startsAt);
             const localTime = t.toLocaleTimeString(undefined, {

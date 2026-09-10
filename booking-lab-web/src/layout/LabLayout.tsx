@@ -2,6 +2,7 @@ import { AppShell, Box, Group, Text, UnstyledButton } from '@mantine/core';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery } from 'urql';
 import { BOOKING_SESSION_QUERY } from '../client/gql';
+import { PanelDock } from '../panels/PanelDock';
 import { CustomSelectionSidebar } from '../shared/CustomSelectionSidebar';
 import { LabBanner } from '../shared/LabBanner';
 import { useSessionContext } from '../shared/SessionContext';
@@ -88,6 +89,7 @@ export function LabLayout() {
           <CustomSelectionSidebar />
         </AppShell.Aside>
       )}
+      <PanelDock />
     </AppShell>
   );
 }

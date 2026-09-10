@@ -5,7 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "predev": "node scripts/build-docs-index.mjs || true",
+    "prebuild": "node scripts/build-docs-index.mjs || true",
     "build": "tsc -b && vite build",
+    "docs:index": "node scripts/build-docs-index.mjs",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -17,6 +20,7 @@
     "@tabler/icons-react": "^3.34.0",
     "@xstate/react": "^6.1.0",
     "graphql": "^16.9.0",
+    "minisearch": "^7.2.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-router-dom": "^7.9.2",
