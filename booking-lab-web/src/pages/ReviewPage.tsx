@@ -90,17 +90,11 @@ export function ReviewPage() {
   const [, makeSelections] = useMutation(MAKE_SELECTIONS_MUTATION);
 
   // PRD Step 3: "Who is this for?" — Me vs Someone else.
-  const [forWho, setForWho] = useState<'ME' | 'OTHER'>(
-    session?.selections.mode === 'SELF' ? 'ME' : session?.selections.mode ? 'OTHER' : 'ME',
-  );
-  // If Other: which sub-scenario?
-  const [otherMode, setOtherMode] = useState<'GIFT_SCHEDULE_NOW' | 'GIFT_SCHEDULE_LATER'>(
-    session?.selections.mode === 'GIFT_SCHEDULE_LATER'
-      ? 'GIFT_SCHEDULE_LATER'
-      : 'GIFT_SCHEDULE_NOW',
-  );
-  const [modeInitialized, setModeInitialized] = useState(false);
-  const mode: Mode = forWho === 'ME' ? 'SELF' : otherMode;
+  const [modeOverride, setModeOverride] = useState<Mode | null>(null);
+  const sessionMode = session?.selections.mode ?? 'SELF';
+  const mode = modeOverride ?? sessionMode;
+  const forWho = mode === 'SELF' ? 'ME' : 'OTHER';
+  const otherMode = mode === 'SELF' ? 'GIFT_SCHEDULE_NOW' : mode;
 
   const [recipientName, setRecipientName] = useState(session?.selections.recipientName ?? '');
   const [recipientEmail, setRecipientEmail] = useState(session?.selections.recipientEmail ?? '');
@@ -115,19 +109,10 @@ export function ReviewPage() {
   const [heardAbout, setHeardAbout] = useState<string | null>('Yelp / Review Website');
   const [heardAboutMore, setHeardAboutMore] = useState<string | null>('Yelp');
 
-  useEffect(() => {
-    if (!session || modeInitialized) return;
-    setForWho(session.selections.mode === 'SELF' ? 'ME' : 'OTHER');
-    if (session.selections.mode !== 'SELF') {
-      setOtherMode(session.selections.mode);
-    }
-    setModeInitialized(true);
-  }, [session, modeInitialized]);
-
   // Persist mode to server whenever it changes so all screens stay in sync.
   // Phase 1B has no slot — clear any leftover slot from a prior Phase 1A visit.
   useEffect(() => {
-    if (!sessionId || !session || !modeInitialized) return;
+    if (!sessionId || !session || modeOverride === null) return;
     if (session.selections.mode !== mode) {
       const patch: Record<string, unknown> = { mode, isGiftBooking: mode !== 'SELF' };
       if (mode === 'GIFT_SCHEDULE_LATER') patch.slotId = null;
@@ -135,7 +120,7 @@ export function ReviewPage() {
     } else if (mode === 'GIFT_SCHEDULE_LATER' && session.selections.slotId) {
       void makeSelections({ sessionId, input: { slotId: null } });
     }
-  }, [mode, modeInitialized, sessionId, session, makeSelections]);
+  }, [mode, modeOverride, sessionId, session, makeSelections]);
 
   const discountCents = mode === 'SELF' ? 5100 : 0;
   const total = useMemo(
@@ -277,7 +262,18 @@ export function ReviewPage() {
           <Title order={5}>Who is this for?</Title>
           <InfoTooltip label="PRD Step 3 — resolves the booking mode. 'For me' means Athlete = Purchaser = Booking Owner (self-serve). 'For someone else' splits those roles: Purchaser pays, Recipient attends. MVP's only BOBO variant is Gift Booking. Parent/guardian and corporate-sponsored booking are explicit non-goals for this phase. PRD §2 (Goals 1–3), §2 Non-Goals, §7 Business Rules 1–2." />
         </Group>
-        <Radio.Group value={forWho} onChange={(v) => setForWho(v as 'ME' | 'OTHER')}>
+        <Radio.Group
+          value={forWho}
+          onChange={(value) =>
+            setModeOverride(
+              value === 'ME'
+                ? 'SELF'
+                : sessionMode === 'SELF'
+                  ? 'GIFT_SCHEDULE_NOW'
+                  : sessionMode,
+            )
+          }
+        >
           <Stack gap="xs" mt="xs">
             <Radio
               value="ME"
@@ -313,7 +309,9 @@ export function ReviewPage() {
             <Divider mb="md" label="How should they book their appointment?" labelPosition="left" />
             <Radio.Group
               value={otherMode}
-              onChange={(v) => setOtherMode(v as 'GIFT_SCHEDULE_NOW' | 'GIFT_SCHEDULE_LATER')}
+              onChange={(value) =>
+                setModeOverride(value as 'GIFT_SCHEDULE_NOW' | 'GIFT_SCHEDULE_LATER')
+              }
             >
               <Stack gap="xs">
                 <Radio
