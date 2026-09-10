@@ -5,7 +5,7 @@ import { MantineProvider } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
+import { HashRouter } from 'react-router-dom';
 import { Provider as UrqlProvider } from 'urql';
 import App from './App.tsx';
 import { gqlClient } from './client/urql';
@@ -21,9 +21,9 @@ createRoot(document.getElementById('root')!).render(
       <UrqlProvider value={gqlClient}>
         <SessionProvider>
           <BookingActionsProvider>
-            <BrowserRouter>
+            <HashRouter>
               <App />
-            </BrowserRouter>
+            </HashRouter>
           </BookingActionsProvider>
         </SessionProvider>
       </UrqlProvider>
