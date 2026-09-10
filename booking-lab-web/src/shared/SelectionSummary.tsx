@@ -1,6 +1,7 @@
 import { Anchor, Badge, Box, Divider, Group, Paper, Stack, Text, ThemeIcon } from '@mantine/core';
 import { IconBuilding, IconCalendarEvent, IconLock } from '@tabler/icons-react';
 import { PriceLabel } from './PriceLabel';
+import { RequirementRef } from './RequirementRef';
 
 type Site = { name: string; addressLine: string; city: string };
 type Service = { name: string; priceCents: number; durationMinutes: number };
@@ -134,8 +135,9 @@ export function SelectionSummary({
           <Group gap={6}>
             <IconLock size={14} color="var(--mantine-color-purple-6)" />
             <Text size="xs" c="dimmed">
-              Included and paid by the Purchaser. Assessments are locked (FR-6); pricing is
-              never shown to the Recipient (FR-7).
+              Included and paid by the Purchaser. Assessments are locked{' '}
+              <RequirementRef code="FR-6" />; pricing is never shown to the Recipient{' '}
+              <RequirementRef code="FR-7" />.
             </Text>
           </Group>
         </>

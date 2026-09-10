@@ -1,5 +1,6 @@
 import { Alert, Group, Text } from '@mantine/core';
 import { IconFlask } from '@tabler/icons-react';
+import { RequirementRef } from './RequirementRef';
 
 export function LabBanner() {
   return (
@@ -17,10 +18,14 @@ export function LabBanner() {
       p="xs"
     >
       <Group justify="space-between">
-        <Text size="xs" fw={600}>
-          Booking Lab · LP-2112 · BOBO = <b>B</b>ooking <b>o</b>n <b>B</b>ehalf <b>o</b>f Others
-          — sandbox (no real payments or emails)
-        </Text>
+        <Group gap={5} wrap="wrap">
+          <Text size="xs" fw={600}>Booking Lab ·</Text>
+          <RequirementRef code="LP-2112" />
+          <Text size="xs" fw={600}>
+            · BOBO = <b>B</b>ooking <b>o</b>n <b>B</b>ehalf <b>o</b>f Others — sandbox
+            (no real payments or emails)
+          </Text>
+        </Group>
         <Text size="xs" c="dimmed">
           Server: <code>localhost:4000/graphql</code>
         </Text>

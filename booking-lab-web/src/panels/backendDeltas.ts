@@ -297,7 +297,7 @@ export const DELTAS: Partial<Record<FlowStepId, StepDelta>> = {
         symbol: 'GetGiftBookingPreview',
         url: `${REPO}/src/HPH.Core.API.GraphQL/Entities/Gifts`,
         change:
-          'New — resolves by token, strips priceCents (FR-7), returns site + service + optional slot.',
+          'New — resolves by token, strips pricing from the recipient response, and returns the site, service, and optional slot.',
       },
       {
         file: 'src/HPH.Core.API.GraphQL/Security/GiftTokenScheme.cs',

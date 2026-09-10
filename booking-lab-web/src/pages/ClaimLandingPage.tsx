@@ -26,6 +26,7 @@ import { useMutation, useQuery } from 'urql';
 import { CLAIM_GIFT_MUTATION, GIFT_PREVIEW_QUERY } from '../client/gql';
 import { FlowBadge } from '../shared/FlowBadge';
 import { InfoTooltip } from '../shared/InfoTooltip';
+import { RequirementRef } from '../shared/RequirementRef';
 
 type Preview = {
   id: string;
@@ -266,9 +267,12 @@ export function ClaimLandingPage() {
             <Text size="sm" c="dimmed">
               {claim.service?.description}
             </Text>
-            <Badge color="purple" variant="light" w="max-content" leftSection={<IconLock size={12} />}>
-              Included · pricing hidden (FR-7)
-            </Badge>
+            <Group gap={5}>
+              <Badge color="purple" variant="light" w="max-content" leftSection={<IconLock size={12} />}>
+                Included · pricing hidden
+              </Badge>
+              <RequirementRef code="FR-7" />
+            </Group>
             <Box>
               <Text size="xs" c="dimmed">
                 Location

@@ -32,6 +32,7 @@ import {
 } from '../client/gql';
 import { FlowBadge } from '../shared/FlowBadge';
 import { InfoTooltip } from '../shared/InfoTooltip';
+import { RequirementRef } from '../shared/RequirementRef';
 import { SelectionCard } from '../shared/SelectionCard';
 
 type Preview = {
@@ -197,7 +198,8 @@ export function GiftSchedulePage() {
             <Alert color="purple" variant="light" icon={<IconGift size={16} />} mt="xs">
               Included and paid by{' '}
               <b>{claim.selections.purchaserName ?? 'the purchaser'}</b>. You'll get a
-              reminder the day before. Post-visit surveys go to you (FR-8).
+              reminder the day before. Post-visit surveys go to you{' '}
+              <RequirementRef code="FR-8" />.
             </Alert>
           </Stack>
         </Card>
@@ -269,7 +271,8 @@ export function GiftSchedulePage() {
         </Text>
         <Divider my="sm" />
         <Text size="xs" c="dimmed">
-          Included and paid by the Purchaser. Pricing is not shown to Recipients (FR-7).
+          Included and paid by the Purchaser. Pricing is not shown to Recipients{' '}
+          <RequirementRef code="FR-7" />.
         </Text>
       </Card>
 

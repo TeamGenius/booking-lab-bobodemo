@@ -31,6 +31,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from 'urql';
 import { BOOKING_SESSION_QUERY } from '../client/gql';
 import { InfoTooltip } from '../shared/InfoTooltip';
+import { RequirementRef } from '../shared/RequirementRef';
 import { SectionTitle } from '../shared/SectionTitle';
 import { SelectionSummary } from '../shared/SelectionSummary';
 import { useSessionContext } from '../shared/SessionContext';
@@ -164,7 +165,7 @@ export function ConfirmationPage() {
                 icon={<IconMailForward size={16} />}
               >
                 Phase 1A: you booked the slot on their behalf. Their identity is stored on
-                the Booking; you remain the Payment Owner (FR-9).
+                the Booking; you remain the Payment Owner <RequirementRef code="FR-9" />.
               </Alert>
             ) : (
               <Alert color="orange" variant="light" icon={<IconCircleCheck size={16} />}>
