@@ -28,7 +28,7 @@ const goServices = async (ctx: TutorialCtx) => {
 
 export const SELF_WITH_SCHEDULING: TutorialScript = {
   id: 'self-with-scheduling',
-  title: 'BOBO · buy for self',
+  title: 'Standard booking · schedule now',
   subtitle: 'Athlete picks a site + service + slot, then pays.',
   steps: [
     {
@@ -98,7 +98,7 @@ export const SELF_WITH_SCHEDULING: TutorialScript = {
 // Service.RequiresScheduling and skip both the Schedule page and the slot.
 export const SELF_NO_SCHEDULING: TutorialScript = {
   id: 'self-no-scheduling',
-  title: 'BOBO · buy without scheduling',
+  title: 'Standard booking · no scheduling',
   subtitle: 'Slot-less product — real API would skip the calendar step.',
   steps: [
     {

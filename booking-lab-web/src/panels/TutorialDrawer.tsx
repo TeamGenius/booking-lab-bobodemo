@@ -1,4 +1,5 @@
 import {
+  Alert,
   Badge,
   Button,
   Card,
@@ -41,6 +42,15 @@ export function TutorialDrawer({ opened, onClose }: Props) {
         Pick a flow. Auto pauses to explain each step, performs the action, then
         gives you time to review the result. Guided waits for you to select Next.
       </Text>
+
+      <Alert color="purple" variant="light" mb="sm" title="BOBO vs. gift booking">
+        <Text size="xs">
+          <b>BOBO</b> is the broader ability to book for someone else. A <b>gift
+          booking</b> is a BOBO purchase where the purchaser also pays for the
+          recipient, either choosing the appointment now or letting the recipient
+          schedule later.
+        </Text>
+      </Alert>
 
       <Stack gap="sm">
         {ALL_SCRIPTS.map((s) => (

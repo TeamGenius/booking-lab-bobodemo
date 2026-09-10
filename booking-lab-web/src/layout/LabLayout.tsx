@@ -1,5 +1,5 @@
 import { AppShell, Box, Group, Text, UnstyledButton } from '@mantine/core';
-import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { useQuery } from 'urql';
 import { BOOKING_SESSION_QUERY } from '../client/gql';
 import { PanelDock } from '../panels/PanelDock';
@@ -7,12 +7,15 @@ import { CustomSelectionSidebar } from '../shared/CustomSelectionSidebar';
 import { LabBanner } from '../shared/LabBanner';
 import { useSessionContext } from '../shared/SessionContext';
 import { BRAND_MIDNIGHT_BLUE } from '../theme';
+import { useTutorial } from '../tutorial/TutorialContext';
+import { useTutorialCtx } from '../tutorial/useTutorialCtx';
 
 export function LabLayout() {
   const location = useLocation();
-  const navigate = useNavigate();
   const isRecipient = location.pathname.startsWith('/gift');
-  const { sessionId, setSessionId } = useSessionContext();
+  const { sessionId } = useSessionContext();
+  const { active, stop } = useTutorial();
+  const tutorialCtx = useTutorialCtx();
 
   const [sessionResult] = useQuery<{
     bookingSession: { selections: { serviceId: string | null } } | null;
@@ -27,10 +30,9 @@ export function LabLayout() {
   // AFTER the customer has committed a service to the session.
   const showAside = location.pathname === '/booking' && hasService;
 
-  // Drop the current sandbox session and return to the landing page.
-  const goHome = () => {
-    setSessionId(null);
-    navigate('/', { replace: true });
+  const resetLab = async () => {
+    if (active) stop();
+    await tutorialCtx.reset();
   };
 
   return (
@@ -57,8 +59,8 @@ export function LabLayout() {
           }}
         >
           <UnstyledButton
-            onClick={goHome}
-            aria-label="Human Powered Health — start over"
+            onClick={() => void resetLab()}
+            aria-label="Human Powered Health — reset lab and start over"
             style={{ borderRadius: 6 }}
           >
             <Group gap={10} align="center">
