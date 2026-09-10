@@ -63,32 +63,6 @@ Key behaviors mirrored from the Tech Spec:
 
 Tooltips in the UI cite the specific PRD / Spec sections they enforce.
 
-## Deploy
-
-### Option A — Render Blueprint (recommended, both services on free tier)
-
-1. Sign in to <https://dashboard.render.com> with a Render account that has access to `TeamGenius`.
-2. **New +** → **Blueprint** → point at this repo (`TeamGenius/booking-lab-bobodemo`).
-3. Render reads [`render.yaml`](./render.yaml) and provisions:
-   - `booking-lab-server` — Node web service running `npm start` (graphql-yoga).
-   - `booking-lab-web` — static site built by `npm run build` and served from `dist/`.
-4. After the first deploy:
-   - Copy the server's public URL (e.g. `https://booking-lab-server.onrender.com`) and set `VITE_GRAPHQL_URL=https://booking-lab-server.onrender.com/graphql` on the **booking-lab-web** service, then trigger a redeploy so Vite bakes the URL into the bundle.
-   - Set `CORS_ORIGINS` on **booking-lab-server** to the static site URL (or leave `*` for a public demo).
-
-Free-plan caveats: the server sleeps after 15 min of inactivity and cold-starts on the next request. Sessions are in-memory, so any restart wipes them — this is fine for a demo.
-
-### Option B — Vercel (web) + Railway/Fly.io (server)
-
-- **Web**: import the repo into Vercel, set **Root Directory** to `booking-lab-web`, build command `npm run build`, output directory `dist`, and env var `VITE_GRAPHQL_URL` pointing at the deployed server.
-- **Server**: deploy `booking-lab-server/` as a Node service on Railway or Fly.io with `npm start`, `PORT` from the platform, and `CORS_ORIGINS` set to the Vercel URL.
-
-Serverless functions (Vercel/Netlify Functions) are **not** recommended for the server — every invocation is a fresh process, so the in-memory session store would be wiped between requests.
-
-### Option C — Single container (advanced)
-
-Build the Vite bundle and serve it as static assets from the same graphql-yoga process. Not implemented here; would require adding a static-file middleware to the server and dropping the separate `booking-lab-web` deploy.
-
 ## Non-goals
 
 This is a sandbox. It intentionally does **not**:
