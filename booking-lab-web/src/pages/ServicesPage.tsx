@@ -173,6 +173,7 @@ export function ServicesPage() {
                 key={s.id}
                 site={s}
                 selected={false}
+                dataTourId={s.id}
                 onClick={() => setSelectedSiteId(s.id)}
               />
             ))}
@@ -231,6 +232,7 @@ export function ServicesPage() {
             key={svc.id}
             svc={svc}
             selected={selectedServiceId === svc.id}
+            dataTourId={svc.id}
             onClick={() => void handlePickService(svc.id)}
           />
         ))}
@@ -244,11 +246,13 @@ function LocationCard({
   selected,
   onClick,
   trailing,
+  dataTourId,
 }: {
   site: Site;
   selected: boolean;
   onClick?: () => void;
   trailing?: React.ReactNode;
+  dataTourId?: string;
 }) {
   return (
     <Card
@@ -256,6 +260,7 @@ function LocationCard({
       radius="md"
       p="md"
       onClick={onClick}
+      data-tour-site-card={dataTourId}
       style={{
         cursor: onClick ? 'pointer' : 'default',
         borderColor: selected ? 'var(--mantine-color-orange-6)' : undefined,
@@ -299,10 +304,12 @@ function ServiceCard({
   svc,
   selected,
   onClick,
+  dataTourId,
 }: {
   svc: Service;
   selected: boolean;
   onClick: () => void;
+  dataTourId?: string;
 }) {
   const tags = SERVICE_TAGS[svc.id] ?? [];
   return (
@@ -311,6 +318,7 @@ function ServiceCard({
       radius="md"
       p={0}
       onClick={onClick}
+      data-tour-service-card={dataTourId}
       style={{
         cursor: 'pointer',
         borderColor: selected ? 'var(--mantine-color-orange-6)' : undefined,

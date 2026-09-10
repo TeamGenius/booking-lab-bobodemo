@@ -265,6 +265,7 @@ export function SchedulePage() {
                 color={selected ? 'purple' : undefined}
                 radius="md"
                 size="md"
+                data-tour-slot={slot.id}
                 onClick={() => setSelectedSlotId(slot.id)}
                 styles={{ label: { display: 'flex', gap: 6, alignItems: 'baseline' } }}
               >

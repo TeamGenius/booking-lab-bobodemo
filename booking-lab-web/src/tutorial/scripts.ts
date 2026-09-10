@@ -16,131 +16,125 @@ export type TutorialScript = {
   steps: TutorialStep[];
 };
 
-const PURCHASER = {
-  name: 'Jamie Chen',
-  email: 'jamie.chen@example.com',
-};
-const RECIPIENT = {
-  name: 'Alex Rivera',
-  email: 'alex.rivera@example.com',
-};
+const PURCHASER = { name: 'Jamie Chen', email: 'jamie.chen@example.com' };
+const RECIPIENT = { name: 'Alex Rivera', email: 'alex.rivera@example.com' };
 
+// Reset + return to services landing, then wait for the page to render + a
+// session id to exist. Every script starts here to guarantee a clean slate.
 const goServices = async (ctx: TutorialCtx) => {
   ctx.reset();
-  ctx.navigate('/booking', { replace: true });
+  await ctx.waitForSelector('[data-tour-site-card]:not([data-tour-site-card=""])');
+  await ctx.waitForSession();
 };
 
 export const SELF_WITH_SCHEDULING: TutorialScript = {
   id: 'self-with-scheduling',
   title: 'BOBO · buy for self',
-  subtitle: 'Athlete picks a service, schedules, pays.',
+  subtitle: 'Athlete picks a site + service + slot, then pays.',
   steps: [
     {
       id: 'reset',
-      caption: 'Reset the lab and land on Services.',
+      caption: 'Fresh lab session on the Services page.',
       run: goServices,
+      waitMs: 300,
+    },
+    {
+      id: 'pick-site-service',
+      caption: 'Pick a site and a service.',
+      detail: 'Clicks the first location card, then the first service card.',
+      target: '[data-tour="service-grid"], [data-tour-site-card]',
+      run: (ctx) => ctx.pickSiteAndServiceViaUI(),
       waitMs: 400,
     },
     {
-      id: 'pick-service',
-      caption: 'Pick a site + service.',
-      detail: 'Commits siteId + serviceId to the session via makeSelections.',
-      target: '[data-tour="service-grid"]',
-      run: async (ctx) => {
-        await ctx.chooseServiceAndSite();
-      },
-      waitMs: 600,
-    },
-    {
-      id: 'go-schedule',
-      caption: 'Advance to the schedule step.',
-      run: async (ctx) => ctx.navigate('/booking/schedule'),
+      id: 'continue-to-schedule',
+      caption: 'Click Continue → Schedule.',
+      target: '[data-tour="primary-action"]',
+      run: (ctx) => ctx.clickPrimaryAction(),
       waitMs: 400,
     },
     {
       id: 'pick-slot',
       caption: 'Pick the first available slot.',
       target: '[data-tour="slot-grid"]',
-      run: async (ctx) => {
-        await ctx.pickFirstSlot();
-      },
-      waitMs: 700,
+      run: (ctx) => ctx.pickFirstSlotViaUI(),
+      waitMs: 400,
     },
     {
-      id: 'go-review',
-      caption: 'Move to Review.',
-      run: async (ctx) => ctx.navigate('/booking/review'),
+      id: 'continue-to-review',
+      caption: 'Continue → Review.',
+      target: '[data-tour="primary-action"]',
+      run: (ctx) => ctx.clickPrimaryAction(),
       waitMs: 400,
     },
     {
       id: 'pay',
-      caption: 'Pay & finalize (SELF).',
-      detail: 'PayAndFinalize creates a Visit + Invoice, sets status to CONFIRMED.',
+      caption: 'Pay & finalize as SELF.',
+      detail: 'PayAndFinalize commits the booking + invoice server-side.',
       run: async (ctx) => {
         await ctx.setMode('SELF');
         await ctx.payAndFinalize({
           purchaserName: PURCHASER.name,
           purchaserEmail: PURCHASER.email,
         });
+        ctx.navigate('/booking/confirmation');
       },
       waitMs: 700,
-    },
-    {
-      id: 'confirm',
-      caption: 'Confirmation page.',
-      run: async (ctx) => ctx.navigate('/booking/confirmation'),
-      waitMs: 400,
     },
   ],
 };
 
+// The mock schema still requires a slot for SELF, so we pick one silently
+// and label the step honestly. The real API would branch on
+// Service.RequiresScheduling and skip both the Schedule page and the slot.
 export const SELF_NO_SCHEDULING: TutorialScript = {
   id: 'self-no-scheduling',
   title: 'BOBO · buy without scheduling',
-  subtitle: 'Athlete buys a slot-less product (skips the calendar step).',
+  subtitle: 'Slot-less product — real API would skip the calendar step.',
   steps: [
     {
       id: 'reset',
-      caption: 'Reset the lab.',
+      caption: 'Fresh lab session on Services.',
       run: goServices,
+      waitMs: 300,
+    },
+    {
+      id: 'pick-site-service',
+      caption: 'Pick a site and a service.',
+      detail:
+        'Real API: Service.RequiresScheduling = false would skip the next step.',
+      target: '[data-tour="service-grid"], [data-tour-site-card]',
+      run: (ctx) => ctx.pickSiteAndServiceViaUI(),
       waitMs: 400,
     },
     {
-      id: 'pick-service',
-      caption: 'Pick a service.',
-      detail:
-        'In the real API, Service.RequiresScheduling = false would skip the slot step.',
+      id: 'continue-to-schedule',
+      caption: 'Continue (mock still shows the calendar).',
+      target: '[data-tour="primary-action"]',
+      run: (ctx) => ctx.clickPrimaryAction(),
+      waitMs: 400,
+    },
+    {
+      id: 'auto-slot',
+      caption: 'Silently pick a slot to satisfy the mock, then jump to Review.',
       run: async (ctx) => {
-        await ctx.chooseServiceAndSite();
+        await ctx.pickFirstSlotViaUI();
+        await ctx.clickPrimaryAction();
       },
       waitMs: 500,
     },
     {
-      id: 'skip-to-review',
-      caption: 'Skip the schedule step (product is slot-less).',
-      run: async (ctx) => ctx.navigate('/booking/review'),
-      waitMs: 400,
-    },
-    {
       id: 'pay',
-      caption: 'Pay & finalize without a slot.',
-      detail:
-        'Mock schema requires a slot for SELF — for the demo we fall back to picking one automatically. Real API would branch on RequiresScheduling.',
+      caption: 'Pay & finalize (no slot-picking step in the real flow).',
       run: async (ctx) => {
-        await ctx.pickFirstSlot();
         await ctx.setMode('SELF');
         await ctx.payAndFinalize({
           purchaserName: PURCHASER.name,
           purchaserEmail: PURCHASER.email,
         });
+        ctx.navigate('/booking/confirmation');
       },
       waitMs: 700,
-    },
-    {
-      id: 'confirm',
-      caption: 'Confirmation.',
-      run: async (ctx) => ctx.navigate('/booking/confirmation'),
-      waitMs: 400,
     },
   ],
 };
@@ -148,41 +142,46 @@ export const SELF_NO_SCHEDULING: TutorialScript = {
 export const GIFT_WITH_SCHEDULING: TutorialScript = {
   id: 'gift-with-scheduling',
   title: 'Gift · Phase 1A — schedule now',
-  subtitle: 'Purchaser picks a service + slot for the recipient, then pays.',
+  subtitle: 'Purchaser picks the slot on the recipient\'s behalf.',
   steps: [
     {
       id: 'reset',
-      caption: 'Reset the lab.',
+      caption: 'Fresh lab session on Services.',
       run: goServices,
+      waitMs: 300,
+    },
+    {
+      id: 'pick-site-service',
+      caption: 'Purchaser picks a site + service.',
+      target: '[data-tour="service-grid"], [data-tour-site-card]',
+      run: (ctx) => ctx.pickSiteAndServiceViaUI(),
       waitMs: 400,
     },
     {
-      id: 'pick-service',
-      caption: 'Purchaser picks a service.',
-      run: async (ctx) => {
-        await ctx.chooseServiceAndSite();
-      },
-      waitMs: 500,
+      id: 'continue-to-schedule',
+      caption: 'Continue → Schedule.',
+      target: '[data-tour="primary-action"]',
+      run: (ctx) => ctx.clickPrimaryAction(),
+      waitMs: 400,
     },
     {
       id: 'pick-slot',
-      caption: 'Purchaser picks a slot on the recipient\'s behalf.',
-      run: async (ctx) => {
-        await ctx.pickFirstSlot();
-        ctx.navigate('/booking/schedule');
-      },
-      waitMs: 700,
-    },
-    {
-      id: 'go-review',
-      caption: 'Advance to Review.',
-      run: async (ctx) => ctx.navigate('/booking/review'),
+      caption: 'Purchaser picks a slot for the recipient.',
+      target: '[data-tour="slot-grid"]',
+      run: (ctx) => ctx.pickFirstSlotViaUI(),
       waitMs: 400,
     },
     {
-      id: 'pay',
+      id: 'continue-to-review',
+      caption: 'Continue → Review.',
+      target: '[data-tour="primary-action"]',
+      run: (ctx) => ctx.clickPrimaryAction(),
+      waitMs: 400,
+    },
+    {
+      id: 'pay-gift-now',
       caption: 'Pay as gift + schedule-now.',
-      detail: 'PayAndFinalize with mode=GIFT_SCHEDULE_NOW → Booking + Visit + Gift row.',
+      detail: 'PayAndFinalize with mode=GIFT_SCHEDULE_NOW writes Booking + Gift + Visit.',
       run: async (ctx) => {
         await ctx.setMode('GIFT_SCHEDULE_NOW');
         await ctx.payAndFinalize({
@@ -191,48 +190,43 @@ export const GIFT_WITH_SCHEDULING: TutorialScript = {
           recipientName: RECIPIENT.name,
           recipientEmail: RECIPIENT.email,
         });
+        ctx.navigate('/booking/confirmation');
       },
       waitMs: 700,
-    },
-    {
-      id: 'confirm',
-      caption: 'Confirmation — recipient will get a heads-up email.',
-      run: async (ctx) => ctx.navigate('/booking/confirmation'),
-      waitMs: 400,
     },
   ],
 };
 
 export const GIFT_NO_SCHEDULING: TutorialScript = {
   id: 'gift-no-scheduling',
-  title: 'Gift · Phase 1B — recipient picks time',
-  subtitle: 'Purchaser pays for a slot-less gift; recipient later claims + schedules.',
+  title: 'Gift · Phase 1B — recipient schedules',
+  subtitle: 'Purchaser buys a claim link, recipient picks their own time.',
   steps: [
     {
       id: 'reset',
-      caption: 'Reset the lab.',
+      caption: 'Fresh lab session on Services.',
       run: goServices,
+      waitMs: 300,
+    },
+    {
+      id: 'pick-site-service',
+      caption: 'Purchaser picks a site + service.',
+      target: '[data-tour="service-grid"], [data-tour-site-card]',
+      run: (ctx) => ctx.pickSiteAndServiceViaUI(),
       waitMs: 400,
     },
     {
-      id: 'pick-service',
-      caption: 'Purchaser picks a service.',
+      id: 'continue-to-review',
+      caption: 'Skip the calendar — go straight to Review.',
       run: async (ctx) => {
-        await ctx.chooseServiceAndSite();
+        ctx.navigate('/booking/review');
       },
-      waitMs: 500,
-    },
-    {
-      id: 'go-review',
-      caption: 'Skip scheduling — go straight to Review.',
-      run: async (ctx) => ctx.navigate('/booking/review'),
       waitMs: 400,
     },
     {
       id: 'finalize-gift',
-      caption: 'FinalizeGiftBooking — issues a claim token, sends email.',
-      detail:
-        'Creates Booking (no Visit), Gift + GiftClaim rows. Claim URL becomes /gift/<token>.',
+      caption: 'Finalize the gift; server returns a claim token.',
+      detail: 'FinalizeGiftBooking: no slot needed, recipient scheduling happens on claim.',
       run: async (ctx, memo) => {
         await ctx.setMode('GIFT_SCHEDULE_LATER');
         const res = await ctx.finalizeGift({
@@ -241,52 +235,33 @@ export const GIFT_NO_SCHEDULING: TutorialScript = {
           recipientName: RECIPIENT.name,
           recipientEmail: RECIPIENT.email,
         });
+        if (!res.claimToken) throw new Error('No claimToken returned');
         memo.claimToken = res.claimToken;
       },
-      waitMs: 800,
-    },
-    {
-      id: 'confirmation',
-      caption: 'Purchaser confirmation — awaiting claim.',
-      run: async (ctx) => ctx.navigate('/booking/confirmation'),
       waitMs: 500,
     },
     {
-      id: 'open-claim',
-      caption: 'Switch to the recipient — open the claim link.',
-      run: async (ctx, memo) => {
-        const token = memo.claimToken as string | null;
-        if (!token) throw new Error('No claim token');
-        ctx.navigate(`/gift/${token}`);
-      },
+      id: 'purchaser-confirmation',
+      caption: 'Purchaser confirmation page.',
+      run: async (ctx) => ctx.navigate('/booking/confirmation'),
       waitMs: 600,
     },
     {
-      id: 'claim',
-      caption: 'Recipient claims the gift.',
+      id: 'switch-to-recipient',
+      caption: 'Recipient opens the claim link.',
+      detail: 'Same URL a real email would deliver.',
       run: async (ctx, memo) => {
-        const token = memo.claimToken as string | null;
-        if (!token) throw new Error('No claim token');
-        await ctx.claimGift(token, RECIPIENT.email);
+        const token = memo.claimToken as string;
+        ctx.navigate(`/gift/${token}`);
       },
       waitMs: 500,
     },
     {
-      id: 'go-claim-schedule',
-      caption: 'Recipient picks a time.',
+      id: 'recipient-claim',
+      caption: 'Recipient claims the gift + schedules.',
       run: async (ctx, memo) => {
-        const token = memo.claimToken as string | null;
-        if (!token) throw new Error('No claim token');
-        ctx.navigate(`/gift/${token}/schedule`);
-      },
-      waitMs: 400,
-    },
-    {
-      id: 'schedule-claim',
-      caption: 'ScheduleClaimedBooking → CONFIRMED.',
-      run: async (ctx, memo) => {
-        const token = memo.claimToken as string | null;
-        if (!token) throw new Error('No claim token');
+        const token = memo.claimToken as string;
+        await ctx.claimGift(token, RECIPIENT.email);
         await ctx.scheduleClaimed(token);
       },
       waitMs: 700,

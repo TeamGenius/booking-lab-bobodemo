@@ -327,6 +327,7 @@ export function CustomSelectionSidebar() {
             fullWidth
             size="md"
             color="purple"
+            data-tour="primary-action"
             onClick={() => void action.onClick()}
             disabled={action.disabled}
             loading={action.loading}
