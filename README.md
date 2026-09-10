@@ -61,6 +61,19 @@ Key behaviors mirrored from the Tech Spec:
 - Recipient flow locks included modules (**FR-6**) and suppresses pricing (**FR-7**).
 - The claim URL is the raw `BookingId` GUID — security relies on GUID entropy + auth on `claimGiftBooking` (Spec §9, §10 Resolved Decision #7).
 
+### Static GitHub Pages claim links
+
+Production resolves the `BookingId` GUID through the authenticated Core API. The GitHub
+Pages build has no shared database, so its generated recipient links append a versioned,
+base64url-encoded snapshot containing only the booking, site, and service IDs. The browser
+validates those IDs against the seeded catalog before hydrating the mock booking. This keeps
+the recipient demo portable across browser profiles and devices without putting names,
+emails, payment details, or prices in the URL.
+
+Older demo links containing only a GUID cannot be reconstructed outside the purchaser's
+browser and must be regenerated. The optional Node server also uses process memory, so it is
+not a durable substitute for the production database.
+
 Tooltips in the UI cite the specific PRD / Spec sections they enforce.
 
 ## Non-goals

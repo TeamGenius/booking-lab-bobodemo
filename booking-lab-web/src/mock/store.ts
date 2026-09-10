@@ -1,5 +1,6 @@
 import type { BookingSession, Selections } from './types';
 import { generateSlots, services, sites } from './seed';
+import { decodeDemoClaimPayload } from '../shared/demoClaimPayload';
 
 const STORAGE_KEY = 'booking-lab.sessions.v1';
 const sessions = new Map<string, BookingSession>();
@@ -35,6 +36,43 @@ function persistSessions() {
   } catch {
     // Storage can be unavailable in restricted browser contexts.
   }
+}
+
+function hydrateDemoClaimFromUrl(token: string): BookingSession | null {
+  if (typeof window === 'undefined') return null;
+
+  const hashQuery = window.location.hash.split('?')[1] ?? '';
+  const payload = decodeDemoClaimPayload(new URLSearchParams(hashQuery).get('demo'), token);
+  if (!payload) return null;
+
+  const site = sites.find((candidate) => candidate.id === payload.siteId);
+  const service = services.find((candidate) => candidate.id === payload.serviceId);
+  if (!site || !service || service.siteId !== site.id) return null;
+
+  const session: BookingSession = {
+    id: token,
+    createdAt: new Date().toISOString(),
+    selections: {
+      siteId: site.id,
+      serviceId: service.id,
+      slotId: null,
+      isGiftBooking: true,
+      mode: 'GIFT_SCHEDULE_LATER',
+      purchaserName: 'Jamie Chen',
+      purchaserEmail: 'jamie.chen@example.com',
+      recipientName: 'Alex Rivera',
+      recipientEmail: 'alex.rivera@example.com',
+    },
+    status: 'PAID_AWAITING_CLAIM',
+    paymentIntentId: null,
+    claimToken: token,
+    emailPreview: null,
+    confirmationCode: null,
+  };
+  sessions.set(session.id, session);
+  sessionsByClaimToken.set(token, session.id);
+  persistSessions();
+  return session;
 }
 
 loadPersistedSessions();
@@ -143,7 +181,7 @@ export const store = {
   getSessionByClaimToken(token: string): BookingSession | null {
     loadPersistedSessions();
     const id = sessionsByClaimToken.get(token);
-    if (!id) return null;
+    if (!id) return hydrateDemoClaimFromUrl(token);
     return sessions.get(id) ?? null;
   },
 };

@@ -31,6 +31,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from 'urql';
 import { BOOKING_SESSION_QUERY } from '../client/gql';
 import { buildClaimUrl } from '../shared/buildClaimUrl';
+import { createDemoClaimPayload } from '../shared/demoClaimPayload';
 import { InfoTooltip } from '../shared/InfoTooltip';
 import { RequirementRef } from '../shared/RequirementRef';
 import { SectionTitle } from '../shared/SectionTitle';
@@ -43,6 +44,8 @@ type Session = {
   confirmationCode: string | null;
   claimToken: string | null;
   selections: {
+    siteId: string | null;
+    serviceId: string | null;
     isGiftBooking: boolean;
     mode: 'SELF' | 'GIFT_SCHEDULE_NOW' | 'GIFT_SCHEDULE_LATER';
     recipientName: string | null;
@@ -89,8 +92,9 @@ export function ConfirmationPage() {
   const mode = session.selections.mode;
   const isScheduleLater = mode === 'GIFT_SCHEDULE_LATER';
   const isScheduleNow = mode === 'GIFT_SCHEDULE_NOW';
+  const demoPayload = createDemoClaimPayload(session);
   const claimUrl = session.claimToken
-    ? buildClaimUrl(session.claimToken)
+    ? buildClaimUrl(session.claimToken, undefined, demoPayload ?? undefined)
     : session.emailPreview?.claimUrl ?? '';
   const emailBody = session.emailPreview
     ? session.emailPreview.body.replace(session.emailPreview.claimUrl, claimUrl)
@@ -226,7 +230,7 @@ export function ConfirmationPage() {
                     To
                   </Text>
                   <Text size="xs" fw={500}>
-                    {session.emailPreview.toName} &lt;{session.emailPreview.to}&gt;
+                      Production key = BookingId GUID · Static demo link includes non-PII context
                   </Text>
                 </Group>
                 <Group justify="space-between" mb={4}>

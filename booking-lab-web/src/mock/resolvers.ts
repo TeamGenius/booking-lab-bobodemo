@@ -1,4 +1,5 @@
 import { buildClaimUrl } from '../shared/buildClaimUrl';
+import { createDemoClaimPayload } from '../shared/demoClaimPayload';
 import { store } from './store';
 import type { BookingSession } from './types';
 
@@ -16,7 +17,8 @@ function buildEmailPreview(session: BookingSession): BookingSession['emailPrevie
     : null;
   const site = session.selections.siteId ? store.siteById(session.selections.siteId) : null;
   if (!recipientEmail || !session.claimToken) return null;
-  const claimUrl = buildClaimUrl(session.claimToken);
+  const demoPayload = createDemoClaimPayload(session);
+  const claimUrl = buildClaimUrl(session.claimToken, undefined, demoPayload ?? undefined);
   return {
     to: recipientEmail,
     toName: recipientName ?? 'friend',

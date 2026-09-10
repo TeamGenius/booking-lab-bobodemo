@@ -20,7 +20,7 @@ import {
   IconLock,
   IconUserCircle,
 } from '@tabler/icons-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery } from 'urql';
 import { CLAIM_GIFT_MUTATION, GIFT_PREVIEW_QUERY } from '../client/gql';
@@ -57,13 +57,12 @@ export function ClaimLandingPage() {
 
   const [, claimGift] = useMutation(CLAIM_GIFT_MUTATION);
 
-  const [recipientName, setRecipientName] = useState('');
-  const [recipientEmail, setRecipientEmail] = useState('');
-  useEffect(() => {
-    if (!claim) return;
-    setRecipientName(claim.selections.recipientName?.trim() ?? '');
-    setRecipientEmail(claim.selections.recipientEmail?.trim() ?? '');
-  }, [claim?.id, claim?.selections.recipientEmail, claim?.selections.recipientName]);
+  const [recipientNameOverride, setRecipientNameOverride] = useState<string | null>(null);
+  const [recipientEmailOverride, setRecipientEmailOverride] = useState<string | null>(null);
+  const recipientName =
+    recipientNameOverride ?? claim?.selections.recipientName?.trim() ?? '';
+  const recipientEmail =
+    recipientEmailOverride ?? claim?.selections.recipientEmail?.trim() ?? '';
 
   const trimmedName = recipientName.trim();
   const trimmedEmail = recipientEmail.trim();
@@ -110,7 +109,8 @@ export function ClaimLandingPage() {
     return (
       <Container size="sm" py="xl">
         <Alert color="red" variant="light" icon={<IconInfoCircle size={16} />}>
-          This booking could not be loaded. Ask the Purchaser to resend the link.
+           This booking could not be loaded. Ask the Purchaser to generate a new link;
+           older GUID-only demo links do not contain portable booking data.
         </Alert>
       </Container>
     );
@@ -164,14 +164,13 @@ export function ClaimLandingPage() {
               <InfoTooltip label="This editable demo form represents the recipient profile returned after authentication. In production, claimGiftBooking is authorized with the User scheme and the recipient userId comes from their JWT, not these fields. The claim also blocks the purchaser from claiming their own gift." />
             </Group>
             <Text size="sm" c="dimmed">
-              We prefilled the details entered by the purchaser. You can correct them
-              before continuing.
+                Demo sign-in details are prefilled. You can correct them before continuing.
             </Text>
             <TextInput
               label="Full name"
               placeholder="Recipient name"
               value={recipientName}
-              onChange={(event) => setRecipientName(event.currentTarget.value)}
+              onChange={(event) => setRecipientNameOverride(event.currentTarget.value)}
               error={recipientName.length > 0 && !trimmedName ? 'Enter your name' : undefined}
               autoComplete="name"
               required
@@ -181,7 +180,7 @@ export function ClaimLandingPage() {
               placeholder="name@example.com"
               type="email"
               value={recipientEmail}
-              onChange={(event) => setRecipientEmail(event.currentTarget.value)}
+              onChange={(event) => setRecipientEmailOverride(event.currentTarget.value)}
               error={recipientEmail.length > 0 && !hasValidEmail ? 'Enter a valid email address' : undefined}
               autoComplete="email"
               required
@@ -197,9 +196,9 @@ export function ClaimLandingPage() {
             <Group gap={6}>
               <IconLock size={14} color="var(--mantine-color-gray-6)" />
               <Text size="xs" c="dimmed">
-                Claim URL = BookingId GUID (<code>{claim.id.slice(0, 8)}…</code>). No
-                one-time token, no expiration — security comes from auth + GUID
-                entropy.
+                 Production claim key = BookingId GUID (<code>{claim.id.slice(0, 8)}…</code>).
+                 This static sandbox also carries non-PII site and service context in the
+                 link because it has no shared database.
               </Text>
             </Group>
 
