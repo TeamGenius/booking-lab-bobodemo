@@ -30,6 +30,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from 'urql';
 import { BOOKING_SESSION_QUERY } from '../client/gql';
+import { buildClaimUrl } from '../shared/buildClaimUrl';
 import { InfoTooltip } from '../shared/InfoTooltip';
 import { RequirementRef } from '../shared/RequirementRef';
 import { SectionTitle } from '../shared/SectionTitle';
@@ -88,6 +89,12 @@ export function ConfirmationPage() {
   const mode = session.selections.mode;
   const isScheduleLater = mode === 'GIFT_SCHEDULE_LATER';
   const isScheduleNow = mode === 'GIFT_SCHEDULE_NOW';
+  const claimUrl = session.claimToken
+    ? buildClaimUrl(session.claimToken)
+    : session.emailPreview?.claimUrl ?? '';
+  const emailBody = session.emailPreview
+    ? session.emailPreview.body.replace(session.emailPreview.claimUrl, claimUrl)
+    : '';
 
   function handleStartOver() {
     setSessionId(null);
@@ -245,7 +252,7 @@ export function ConfirmationPage() {
                     size="sm"
                     style={{ whiteSpace: 'pre-wrap', fontFamily: 'ui-monospace, monospace' }}
                   >
-                    {session.emailPreview.body}
+                    {emailBody}
                   </Text>
                 </Box>
               </ScrollArea>
@@ -259,14 +266,14 @@ export function ConfirmationPage() {
                 </Group>
                 <Group gap="xs" wrap="nowrap">
                   <Anchor
-                    href={session.emailPreview.claimUrl}
+                    href={claimUrl}
                     target="_blank"
                     size="sm"
                     style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}
                   >
-                    {session.emailPreview.claimUrl}
+                    {claimUrl}
                   </Anchor>
-                  <CopyButton value={session.emailPreview.claimUrl}>
+                  <CopyButton value={claimUrl}>
                     {({ copied, copy }) => (
                       <Button
                         size="xs"
@@ -289,7 +296,7 @@ export function ConfirmationPage() {
                   variant="filled"
                   rightSection={<IconExternalLink size={14} />}
                   component="a"
-                  href={session.emailPreview.claimUrl}
+                  href={claimUrl}
                   target="_blank"
                 >
                   Open recipient view

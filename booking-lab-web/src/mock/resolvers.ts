@@ -1,7 +1,6 @@
+import { buildClaimUrl } from '../shared/buildClaimUrl';
 import { store } from './store';
 import type { BookingSession } from './types';
-
-const WEB_ORIGIN = 'http://localhost:5173';
 
 function priceForSession(session: BookingSession): number | null {
   const serviceId = session.selections.serviceId;
@@ -17,7 +16,7 @@ function buildEmailPreview(session: BookingSession): BookingSession['emailPrevie
     : null;
   const site = session.selections.siteId ? store.siteById(session.selections.siteId) : null;
   if (!recipientEmail || !session.claimToken) return null;
-  const claimUrl = `${WEB_ORIGIN}/gift/${session.claimToken}`;
+  const claimUrl = buildClaimUrl(session.claimToken);
   return {
     to: recipientEmail,
     toName: recipientName ?? 'friend',
